@@ -12,7 +12,7 @@ from pymks.tools import draw_crosscorrelations
 import matplotlib.pyplot as plt
 
 
-def png_to_numpy(image_path, threshold, x_min=72, x_max=436, y_min=139, y_max=503):
+def png_to_numpy(image_path, threshold, x_min=72, x_max=328, y_min=139, y_max=395):
     
     '''
     Input : A .png image path for B&W image
@@ -58,7 +58,7 @@ def auto_corr_from_pymks(img_binary):
     correlations = [('black', 'black'), ('white', 'white')]
     draw_autocorrelations(X_auto[0], autocorrelations=correlations)
     
-    return 1
+    return X_auto
 
 def cross_corr_from_pymks(img_binary):
     '''
@@ -73,7 +73,7 @@ def cross_corr_from_pymks(img_binary):
     correlations = [('black', 'white')]
     draw_crosscorrelations(X_cross[0], crosscorrelations=correlations)
     
-    return 1
+    return X_cross
 
 def probability_matrix(img_binary):
     '''
@@ -104,8 +104,8 @@ def probability_matrix(img_binary):
             if(wj<0):
                 wj = wj + img_binary.shape[1]
             
-            p_white = img_binary[ei][j]+img_binary[ei][ej]+img_binary[ei][wj]+img_binary[wi][j]+img_binary[wi][ej]+img_binary[wi][wj]+img_binary[i][j]+img_binary[i][ej]+img_binary[i][wj]
-            p_white = p_white/(9.0)
+            p_white = img_binary[ei][j]+img_binary[wi][j]+img_binary[i][ej]+img_binary[i][wj]
+            p_white = p_white/(4.0)
             p_black = 1.0 - p_white
         
             m_white[i][j] = p_white
@@ -115,21 +115,21 @@ def probability_matrix(img_binary):
 
 def get_2_point_statistics(m1,m2):
     
-    Fourier1 = np.fft.fft(m1.flatten())
-    Fourier2 = np.fft.fft(m2.flatten())
+    Fourier1 = np.fft.fft2(m1)
+    Fourier2 = np.fft.fft2(m2)
     Fourier2 = Fourier2/(m1.shape[0]*m1.shape[1])
     Fourier2_conj =np.conjugate(Fourier2)
     NetFourier = np.multiply(Fourier1,Fourier2_conj)
     
-    back_to_time =np.fft.ifft(NetFourier)
-    img_back = np.abs(back_to_time)
+    back_to_time =np.fft.ifft2(NetFourier)
+    img_back = np.real(back_to_time)
     
     image =np.reshape(img_back,(m1.shape[0],m2.shape[1]))
     plt.imshow(np.fft.fftshift(image), cmap='jet')
     plt.colorbar()
     plt.grid(b=None)
     plt.show()
-    return np.fft.fftshift(image)
+    return np.fft.fftshift(image) 
     
 def auto_corr_from_code(img_binary):
     
