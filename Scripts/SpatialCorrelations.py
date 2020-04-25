@@ -104,8 +104,8 @@ def probability_matrix(img_binary):
             if(wj<0):
                 wj = wj + img_binary.shape[1]
             
-            p_white = img_binary[ei][j]+img_binary[wi][j]+img_binary[i][ej]+img_binary[i][wj]
-            p_white = p_white/(4.0)
+            p_white = img_binary[i][j]#+img_binary[ei][j]+img_binary[wi][j]+img_binary[i][ej]+img_binary[i][wj]
+            p_white = p_white#/(5.0)
             p_black = 1.0 - p_white
         
             m_white[i][j] = p_white
@@ -122,7 +122,7 @@ def get_2_point_statistics(m1,m2):
     NetFourier = np.multiply(Fourier1,Fourier2_conj)
     
     back_to_time =np.fft.ifft2(NetFourier)
-    img_back = np.real(back_to_time)
+    img_back = np.abs(back_to_time)
     
     image =np.reshape(img_back,(m1.shape[0],m2.shape[1]))
     plt.imshow(np.fft.fftshift(image), cmap='jet')
@@ -163,13 +163,5 @@ def cross_corr_from_code(img_binary):
     
     
     return auto1
-    
-    
-
-    
-    
-    
-        
-    
     
     
