@@ -163,5 +163,89 @@ def cross_corr_from_code(img_binary):
     
     
     return auto1
+def radialDistribution(cross):
+    '''
+    Input : Correlation Vector
+    
+    Output : probability radially distributed
+    '''   
+    
+    radiusVector = np.zeros(cross.shape)
+    for i in range(cross.shape[0]):
+        for j in range(cross.shape[1]):
+            radiusVector[i][j] = np.sqrt((i-cross.shape[0]/2)**2 +(j-cross.shape[1]/2)**2)
+    r = np.zeros(int(cross.shape[0]/2))
+    for i in range(r.shape[0]):
+        r1 = (radiusVector>=i)*1
+        r2 = (radiusVector<=i+1)*1
+        r_net = r1*r2
+        sum_val =np.sum(r_net)
+        convolved = np.multiply(r_net,cross)
+        r[i] =np.sum(convolved)/sum_val
+    plt.plot(r)
+    plt.title("radial distribution of probability")
+    
+    
+    
+    
+    
+    return r
+
+def giveAvailablePoints(cross, theta1, theta2):
+    '''
+    Input : Correlation Vector, 2 angles between which you need prob distribution
+    
+    Output : probability radially distributed between angles theta1 and theta2
+    '''
+    start = theta1*np.pi/180
+    end = theta2*np.pi/180
+    
+    
+    angleVector = np.zeros(cross.shape)
+    for i in range(cross.shape[0]):
+        for j in range(cross.shape[1]):
+            if i ==cross.shape[0]/2:
+                angleVector[i][j] = 0
+            if j == cross.shape[1]/2:
+                angleVector[i][j] = np.pi/2
+            else:
+                angleVector[i][j] = np.arctan((i-cross.shape[0]/2)/(cross.shape[1]/2-j))
+    
+    for i in range(angleVector.shape[0]):
+        for j in range(angleVector.shape[1]):
+            if i < cross.shape[0]/2 and j < cross.shape[1]/2 :
+                angleVector[i][j] = angleVector[i][j] + np.pi
+            if i > cross.shape[0]/2 and j < cross.shape[1]/2:
+                angleVector[i][j] = angleVector[i][j] + np.pi
+            if i > cross.shape[0]/2 and j > cross.shape[1]/2:
+                angleVector[i][j] = angleVector[i][j] + np.pi*2
+    
+    
+    r1 = (angleVector>=start)*1
+    r2 = (angleVector<=end)*1
+    r_net_angle = r1*r2
+    
+    
+    radiusVector = np.zeros(cross.shape)
+    for i in range(cross.shape[0]):
+        for j in range(cross.shape[1]):
+            radiusVector[i][j] = np.sqrt((i-cross.shape[0]/2)**2 +(j-cross.shape[1]/2)**2)
+    r = np.zeros(int(cross.shape[0]/2))
+    for i in range(r.shape[0]):
+        r1 = (radiusVector>=i)*1
+        r2 = (radiusVector<=i+1)*1
+        r_net = r1*r2
+        r_net = r_net * r_net_angle
+        sum_val =np.sum(r_net)
+        convolved = np.multiply(r_net,cross)
+        r[i] =np.sum(convolved)/sum_val
+    plt.plot(r)
+    plt.title("radial distribution with angle "+str(theta1)+" & "+ str(theta2))
+    
+        
+    return r_net_angle, r
+
+
+
     
     
