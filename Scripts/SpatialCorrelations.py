@@ -8,9 +8,29 @@ from pymks.tools import draw_microstructures
 from pymks.tools import draw_autocorrelations
 from pymks.stats import crosscorrelate
 from pymks.tools import draw_crosscorrelations
-
+import pandas as pd
 import matplotlib.pyplot as plt
 
+
+def dat_to_numpy(image_path):
+    a = pd.read_csv(image_path,sep=" ", header=None)
+    row_img =np.max(a[0])+1
+    column_img = np.max(a[1])+1
+    img = np.zeros((row_img,column_img))
+    a_numpy = a.to_numpy()
+    for i in range(a_numpy.shape[0]):
+        img[int(a_numpy[i][0])][int(a_numpy[i][1])] = a_numpy[i][2]
+    
+    return img
+def binarize_image_dat(image_as_numpy):
+    
+    '''
+    Input : Image in numpy array format of 0 or 0 cell values
+    
+    Output : Binary Image as numpy
+    
+    '''
+    return (image_as_numpy>=0.5)*1
 
 def png_to_numpy(image_path, threshold, x_min=72, x_max=328, y_min=139, y_max=395):
     
@@ -182,6 +202,7 @@ def radialDistribution(cross):
         sum_val =np.sum(r_net)
         convolved = np.multiply(r_net,cross)
         r[i] =np.sum(convolved)/sum_val
+    r[0] = cross[int(cross.shape[0]/2)][int(cross.shape[1]/2)]
     plt.plot(r)
     plt.title("radial distribution of probability")
     
@@ -191,14 +212,14 @@ def radialDistribution(cross):
     
     return r
 
-def giveAvailablePoints(cross, theta1, theta2):
+def giveAvailablePoints(cross, theta1, theta2, angularShift = 0):
     '''
     Input : Correlation Vector, 2 angles between which you need prob distribution
     
     Output : probability radially distributed between angles theta1 and theta2
     '''
-    start = theta1*np.pi/180
-    end = theta2*np.pi/180
+    start = (theta1+angularShift)*np.pi/180
+    end = (theta2+angularShift)*np.pi/180
     
     
     angleVector = np.zeros(cross.shape)
@@ -239,6 +260,7 @@ def giveAvailablePoints(cross, theta1, theta2):
         sum_val =np.sum(r_net)
         convolved = np.multiply(r_net,cross)
         r[i] =np.sum(convolved)/sum_val
+    r[0] = cross[int(cross.shape[0]/2)][int(cross.shape[1]/2)]
     plt.plot(r)
     plt.title("radial distribution with angle "+str(theta1)+" & "+ str(theta2))
     
@@ -246,6 +268,4 @@ def giveAvailablePoints(cross, theta1, theta2):
     return r_net_angle, r
 
 
-
-    
-    
+        
