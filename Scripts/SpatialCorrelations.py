@@ -263,7 +263,7 @@ def giveAvailablePoints(cross, theta1, theta2, angularShift = 0):
     r[0] = cross[int(cross.shape[0]/2)][int(cross.shape[1]/2)]
     plt.plot(r)
     plt.title("radial distribution with angle "+str(theta1)+" & "+ str(theta2))
-    
+    plt.ho
         
     return r_net_angle, r
 
