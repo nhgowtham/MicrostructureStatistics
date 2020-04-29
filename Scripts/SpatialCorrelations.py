@@ -12,6 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+
 def dat_to_numpy(image_path):
     a = pd.read_csv(image_path,sep=" ", header=None)
     row_img =np.max(a[0])+1
@@ -145,10 +146,6 @@ def get_2_point_statistics(m1,m2):
     img_back = np.abs(back_to_time)
     
     image =np.reshape(img_back,(m1.shape[0],m2.shape[1]))
-    plt.imshow(np.fft.fftshift(image), cmap='jet')
-    plt.colorbar()
-    plt.grid(b=None)
-    plt.show()
     return np.fft.fftshift(image) 
     
 def auto_corr_from_code(img_binary):
@@ -159,12 +156,7 @@ def auto_corr_from_code(img_binary):
     Output : Images of auto correlation
     '''
     m_white,m_black =probability_matrix(img_binary)
-    
-    
-    print('white region : ')
     auto1 = get_2_point_statistics(m_white,m_white)
-    
-    print('black region : ')
     auto2 = get_2_point_statistics(m_black,m_black)
     
     
@@ -177,11 +169,7 @@ def cross_corr_from_code(img_binary):
     Output : Image of cross correlation
     '''
     m_white,m_black =probability_matrix(img_binary)
-    
     auto1 = get_2_point_statistics(m_white,m_black)
-    
-    
-    
     return auto1
 def radialDistribution(cross):
     '''
@@ -203,13 +191,6 @@ def radialDistribution(cross):
         convolved = np.multiply(r_net,cross)
         r[i] =np.sum(convolved)/sum_val
     r[0] = cross[int(cross.shape[0]/2)][int(cross.shape[1]/2)]
-    plt.plot(r)
-    plt.title("radial distribution of probability")
-    
-    
-    
-    
-    
     return r
 
 def giveAvailablePoints(cross, theta1, theta2, angularShift = 0):
@@ -261,9 +242,7 @@ def giveAvailablePoints(cross, theta1, theta2, angularShift = 0):
         convolved = np.multiply(r_net,cross)
         r[i] =np.sum(convolved)/sum_val
     r[0] = cross[int(cross.shape[0]/2)][int(cross.shape[1]/2)]
-    plt.plot(r)
-    plt.title("radial distribution with angle "+str(theta1)+" & "+ str(theta2))
-    plt.ho
+    
         
     return r_net_angle, r
 
