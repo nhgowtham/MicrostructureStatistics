@@ -15,11 +15,19 @@ from Scripts.SpatialCorrelations import *
 
 def image_preprocessing(image_as_numpy):
     img = image_as_numpy-0.5
-    img = gaussian_filter(img, sigma=7)
+    img = gaussian_filter(img, sigma=4)
     return img
 
 
-
+def image_preprocessing2(image_as_numpy):
+    img = image_as_numpy-0.5
+    for i in range(1000):
+        S = img/(np.sqrt(1+img*img))
+        G = 1-gradientMagnitude(img)
+        deltaTau = 0.01
+        img = img+deltaTau*S*G
+    
+    return img/20
 
 def regionsOfBoundary(levelSetImage):
     '''
@@ -27,37 +35,24 @@ def regionsOfBoundary(levelSetImage):
     
     Output : Only boundaries
     '''
-    filter1 = (levelSetImage>-1*0.1)*1
-    filter2 = (levelSetImage<0.1)*1
-    filter3 =filter1*filter2
-   
-    return filter3
+    contourMap = np.zeros(levelSetImage.shape)
+    for i in range(1,levelSetImage.shape[0]-1):
+        for j in range(1,levelSetImage.shape[1]-1):
+            if levelSetImage[i][j]<=0:
+                if levelSetImage[i+1][j]>0 or levelSetImage[i-1][j]>0 or levelSetImage[i][j+1]>0 or levelSetImage[i][j-1]>0 or levelSetImage[i+1][j+1]>0 or levelSetImage[i-1][j-1]>0 or levelSetImage[i+1][j-1]>0 or levelSetImage[i-1][j+1]>0:
+                    contourMap[i][j]=1
+            
+    return contourMap
 
 def contouring(levelSetImage):
     
     contourMap = np.zeros(levelSetImage.shape)
     for i in range(1,levelSetImage.shape[0]-1):
         for j in range(1,levelSetImage.shape[1]-1):
-            if levelSetImage[i][j]>0.0:
-                if levelSetImage[i+1][j]<=0:
+            if levelSetImage[i][j]<=0:
+                if levelSetImage[i+1][j]>0 or levelSetImage[i-1][j]>0 or levelSetImage[i][j+1]>0 or levelSetImage[i][j-1]>0 or levelSetImage[i+1][j+1]>0 or levelSetImage[i-1][j-1]>0 or levelSetImage[i+1][j-1]>0 or levelSetImage[i-1][j+1]>0:
                     contourMap[i][j]=1
-                if levelSetImage[i+1][j+1]<=0:
-                    contourMap[i][j]=1
-                if levelSetImage[i+1][j-1]<=0:
-                    contourMap[i][j]=1
-                if levelSetImage[i-1][j]<=0:
-                    contourMap[i][j]=1
-                if levelSetImage[i-1][j+1]<=0:
-                    contourMap[i][j]=1
-                if levelSetImage[i-1][j-1]<=0:
-                    contourMap[i][j]=1
-                if levelSetImage[i][j+1]<=0:
-                    contourMap[i][j]=1
-                if levelSetImage[i][j-1]<=0:
-                    contourMap[i][j]=1
-                
-                
-                    
+            
     return contourMap
                     
 
@@ -136,15 +131,14 @@ def velocityMagnitude(listOffiles, fileNumber, timestepForDt):
     path = listOffiles[fileNumber]
     img_ = dat_to_numpy(path)
     img_ = image_preprocessing(img_)
-    
+    contour = regionsOfBoundary(img_)
+
     gradient_magnitude =gradientMagnitude(img_)
     dphidt_ =dphidt(listOffiles, fileNumber, timestepForDt)
     
     
-    velocity = np.abs(np.divide(dphidt_,gradient_magnitude))
-    velocity[np.isnan(velocity)] = 0
-    contour = regionsOfBoundary(img_)
-    print('velocity in pixels per time step of image aquisition (of image frequency)')
+    velocity = (np.divide(dphidt_,gradient_magnitude))
+    velocity = np.nan_to_num(velocity)
     
     return velocity*contour
 
@@ -163,6 +157,10 @@ def velocityDirection(listOffiles, fileNumber, timestepForDt):
     normalVector = gradientDirection(img_processed)
     contour = regionsOfBoundary(img_processed)
     
+    
+    normalVector[0][np.isnan(normalVector[0])] = 0
+    normalVector[1][np.isnan(normalVector[1])] = 0
+
     return normalVector[0]*contour*-1, normalVector[1]*contour*-1
     
 
@@ -177,9 +175,10 @@ def radiusCircular(listOffiles, fileNumber, timestepForDt):
     path = listOffiles[fileNumber]
     img_ = dat_to_numpy(path)
    
-    r = np.sum(img_[256])/2
-   
-    return r
+    r = np.sum(img_[256]+img_[257])/4
+    r1= np.sum(img_[:][256]+img_[:][257])/4
+    r_avg = (r+r1)/2
+    return r_avg
 
   
 def velocityCircular(listOffiles, fileNumber, timestepForDt):
@@ -189,35 +188,12 @@ def velocityCircular(listOffiles, fileNumber, timestepForDt):
     Output : Velocity in boundary regions
     '''
     
-    path = listOffiles[fileNumber]
-    path_plus = listOffiles[fileNumber+timestepForDt]
-    path_minus = listOffiles[fileNumber-timestepForDt]
-    path_plus2 = listOffiles[fileNumber+2*timestepForDt]
-    path_minus2 = listOffiles[fileNumber-2*timestepForDt]
+    r_plus = radiusCircular(listOffiles, fileNumber+timestepForDt, timestepForDt)
+    r_minus = radiusCircular(listOffiles, fileNumber-timestepForDt, timestepForDt)
+    r_plus2 = radiusCircular(listOffiles, fileNumber+2*timestepForDt, timestepForDt)
+    r_minus2 = radiusCircular(listOffiles, fileNumber-2*timestepForDt, timestepForDt)
     
-    img_ = dat_to_numpy(path)
-   
-    img_plus = dat_to_numpy(path_plus)
-    
-    
-    img_minus = dat_to_numpy(path_minus)
-    
-    img_plus2 = dat_to_numpy(path_plus2)
-    
-    img_minus2 = dat_to_numpy(path_minus2)
-   
-    rplus = np.sum(img_plus[256])/2
-    rminus = np.sum(img_minus[256])/2
-    velocity = (rplus-rminus)/(2*(timestepForDt))
+    velocity = (-r_plus2+8*r_plus-8*r_minus+r_minus2)/(12*timestepForDt)
     print('velocity in pixels per frame = ',velocity)
     return velocity
 
-def image_preprocessing2(image_as_numpy):
-    img = image_as_numpy-0.5
-    for i in range(1000):
-        S = img/(np.sqrt(1+img*img))
-        G = 1-gradientMagnitude(img)
-        deltaTau = 0.01
-        img = img+deltaTau*S*G
-    
-    return img/20
