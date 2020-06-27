@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 from Scripts import velocityCalculations as vel
-
+import math as maths
+from numpy import linalg as LA
 def unionArray(arr,eq1,eq2):
     arr_ = arr
     val1 = eq1
@@ -130,7 +131,6 @@ def hoshenKoplemanLabels(img_):
     
     
 def precipitateCentres(labelImage, labelNumber):
-    def precipitateCentres(labelImage, labelNumber):
     img = (labelImage==labelNumber)*1
     m_y =[]
     m_x =[]
@@ -167,6 +167,77 @@ def precipitateCentres(labelImage, labelNumber):
         
     return int(cog_y),int(cog_x)
 
+def findAngleMajorMinorEigenvector(labelImage, labelNumber):
+    img = (labelImage==labelNumber)*1
+    if np.sum(img[0]) +np.sum(img[:,0]) + np.sum(img[img.shape[0]-1]) + np.sum(img[:,img.shape[1]-1])==0:
+        t,l,b,e = angleOfInclination(labelImage, labelNumber)
+    else:
+        t,l,b,e = PBC_angleOfInclination(labelImage, labelNumber)
+        
+    return t,l,b,e
+        
+    
+    
+
+def angleOfInclination(labelImage, labelNumber):
+    img = (labelImage==labelNumber)*1
+    M00 = 0
+    M10 = 0
+    M01 = 0
+    M20 = 0
+    M02 = 0
+    M11 = 0
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            if img[i][j]==1:
+                M00 = M00+1
+                M10 = M10+j
+                M01 = M01+i
+                M20 = M20+j*j
+                M02 = M02+i*i
+                M11 = M11+i*j
+    
+    x_avg = M10/M00
+    y_avg = M01/M00
+    mu20 = M20/M00-x_avg*x_avg
+    mu02 = M02/M00-y_avg*y_avg
+    mu11 = M11/M00-x_avg*y_avg
+        
+    theta = 0.5*np.arctan(2*mu11/(mu20-mu02))
+    l = np.sqrt(8*(mu02+mu20+np.sqrt(4*mu11*mu11+(mu20-mu02)*(mu20-mu02))))
+    b = np.sqrt(8*(mu02+mu20-np.sqrt(4*mu11*mu11+(mu20-mu02)*(mu20-mu02))))
+    
+    matrix = np.array([[mu20, mu11],[mu11, mu02]])
+    eigenVectors = LA.eig(matrix)
+    return theta*180/np.pi, l, b, eigenVectors[1]
+    
+
+def PBC_angleOfInclination(labelImage, labelNumber):
+    img = (labelImage==labelNumber)*1
+    x = img.shape[0]
+    y = img.shape[1]
+    img_extended = np.zeros((3*img.shape[0],3*img.shape[1]))
+    img_extended[0:x,0:y] = img
+    img_extended[x:2*x,0:y] = img
+    img_extended[2*x:3*x,0:y] = img
+    img_extended[0:x,y:2*y] = img
+    img_extended[0:x,2*y:3*y] = img
+    img_extended[x:2*x,y:2*y] = img
+    img_extended[x:2*x,2*y:3*y] = img
+    img_extended[2*x:3*x,y:2*y] = img
+    img_extended[2*x:3*x,2*y:3*y] = img
+    
+    new_cogx, new_cogy = precipitateCentres(labelImage, labelNumber)
+    new_cogx = new_cogx+x
+    new_cogy = new_cogy+y
+    
+    labelsBig = hoshenKoplemanLabels(img_extended)
+    label_for_our_ppt = labelsBig[new_cogx][new_cogy]
+    theta, l, b, e = angleOfInclination(labelsBig, label_for_our_ppt)
+
+    return theta, l, b, e
+    
+    
 def areaDistribution(labels):
     A =[]
     noOfLabels = np.max(labels)
