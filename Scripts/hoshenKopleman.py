@@ -257,3 +257,40 @@ def areaDistribution(labels):
     for i in range(1,noOfLabels+1):
         A.append(np.sum((labels==i)*1))
     return A
+
+def precipitateCentresNonCog(labelImage, labelNumber):
+    img = (labelImage==labelNumber)*1
+    m_y =[]
+    m_x =[]
+    x = []
+    y = []
+
+    for i in range(img.shape[0]):
+        m_y.append(np.sum(img[i]))
+        y.append(i/(img.shape[0]-1)*np.pi*2)
+    for j in range(img.shape[1]):
+        m_x.append(np.sum(img[:,j]))
+        x.append(j/(img.shape[1]-1)*np.pi*2)
+    m_x = np.array(m_x)
+    m_y = np.array(m_y)
+    x = np.array(x)
+    y = np.array(y)
+    
+
+    alpha_x = np.cos(x)
+    beta_x = np.sin(x)
+    alpha_mean = np.sum(m_x*np.cos(x))/(np.sum(m_x))
+    beta_mean = np.sum(m_x*np.sin(x))/(np.sum(m_x))
+    theta_avg_x = np.arctan2(-1*beta_mean, -1*alpha_mean)+np.pi
+    cog_x = img.shape[1]*theta_avg_x/(2*np.pi)
+    
+    alpha_y = np.cos(y)
+    beta_y = np.sin(y)
+    alpha_mean = np.sum(m_y*np.cos(y))/(np.sum(m_y))
+    beta_mean = np.sum(m_y*np.sin(y))/(np.sum(m_y))
+    theta_avg_y = np.arctan2(-1*beta_mean, -1*alpha_mean)+np.pi
+    cog_y = img.shape[0]*theta_avg_y/(2*np.pi)
+    
+    
+        
+    return int(cog_y),int(cog_x)
