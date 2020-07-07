@@ -16,8 +16,12 @@ def unionArray(arr,eq1,eq2):
     val2 = eq2
     while arr_[val2]!=val2:
          val2 = arr_[val2]
+         
     arr_[eq1] = val2
+    
+    
     return arr_
+
 
 def hoshenKoplemanLabels(img_):
     properLabels = []
@@ -76,11 +80,13 @@ def hoshenKoplemanLabels(img_):
                             labels[j][i] = largestLabel
                             
     
+    for i in range(labels.shape[0]):
+        for j in range(labels.shape[1]):
+            labels[i][j] = properLabels[labels[i][j]]
             
-            
-    # Restarting the algorithm from scratch ro account for edge values   
-        
     
+            
+    #------------------ 2nd Loop starts here--------------------------#
     for j in range(img_.shape[0]):
         for i in range(img_.shape[1]):
             if img_[j][i] == 1:
@@ -104,19 +110,25 @@ def hoshenKoplemanLabels(img_):
                     
                     if left==1 and above== 0:
                         properLabels=unionArray(properLabels,int(labels[j][i]),int(labels[j][iminus1]))
+                        labels[j][i] = properLabels[labels[j][iminus1]]
                     if left==0 and above== 1:
                         properLabels=unionArray(properLabels,int(labels[j][i]),int(labels[jminus1][i]))
+                        labels[j][i] = properLabels[labels[jminus1][i]]
                     if left==1 and above== 1:
                         if labels[j][iminus1]!= labels[jminus1][i]:
-                            if 1:
+                            if labels[j][iminus1]> labels[jminus1][i]:
                                 properLabels=unionArray(properLabels,int(labels[j][iminus1]),int(labels[jminus1][i]))
-                                properLabels=unionArray(properLabels,int(labels[j][i]),int(labels[jminus1][i]))
+                                labels[j][i] = properLabels[int(labels[j][iminus1])]
+                            if labels[j][iminus1]< labels[jminus1][i]:
+                                properLabels=unionArray(properLabels,int(labels[jminus1][i]),int(labels[j][iminus1]))
+                                labels[j][i] = properLabels[int(labels[j][iminus1])]
                         else:
-                            properLabels=unionArray(properLabels,int(labels[j][i]),int(labels[jminus1][i]))
+                            labels[j][i] = properLabels[labels[j][iminus1]]
+     
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):
             labels[i][j] = properLabels[labels[i][j]]
-    
+            
     L = {}
     a = np.unique(labels).tolist()
     for i in a:
@@ -125,9 +137,10 @@ def hoshenKoplemanLabels(img_):
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):
             labels[i][j] = L[labels[i][j]]
+        
+    
     return labels
                 
-
     
     
 def precipitateCentres(labelImage, labelNumber):
