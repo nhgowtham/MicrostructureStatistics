@@ -10,6 +10,7 @@ import os
 from Scripts import velocityCalculations as vel
 import math as maths
 from numpy import linalg as LA
+import time
 def unionArray(arr,eq1,eq2):
     arr_ = arr
     val1 = eq1
@@ -28,6 +29,8 @@ def hoshenKoplemanLabels(img_):
     for i in range(20000):
         properLabels.append(i)
         
+    start = time.time()
+    
     largestLabel = 0
     labels = np.zeros(img_.shape).astype('int32')
     for j in range(img_.shape[0]):
@@ -79,14 +82,20 @@ def hoshenKoplemanLabels(img_):
                             largestLabel=largestLabel+1
                             labels[j][i] = largestLabel
                             
+    print('L1',time.time()-start, 'secs')
     
+    start = time.time()
+
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):
             labels[i][j] = properLabels[labels[i][j]]
-            
+    print('L2',time.time()-start, 'secs')
+           
     
             
     #------------------ 2nd Loop starts here--------------------------#
+    
+    start = time.time()
     for j in range(img_.shape[0]):
         for i in range(img_.shape[1]):
             if img_[j][i] == 1:
@@ -125,19 +134,22 @@ def hoshenKoplemanLabels(img_):
                         else:
                             labels[j][i] = properLabels[labels[j][iminus1]]
      
+    print('L3',time.time()-start, 'secs')
+    
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):
             labels[i][j] = properLabels[labels[i][j]]
-            
+    
+    start = time.time()
     L = {}
     a = np.unique(labels).tolist()
     for i in a:
         L[i] = a.index(i)
-    
+
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):
             labels[i][j] = L[labels[i][j]]
-        
+    print('L4',time.time()-start, 'secs')  
     
     return labels
                 
