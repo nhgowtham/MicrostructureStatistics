@@ -11,23 +11,43 @@ from Scripts import velocityCalculations as vel
 import math as maths
 from numpy import linalg as LA
 import time
-def unionArray(arr,eq1,eq2):
-    arr_ = arr
-    val1 = eq1
-    val2 = eq2
-    while arr_[val2]!=val2:
-         val2 = arr_[val2]
-         
-    arr_[eq1] = val2
+
+def root(arr, i):
+    j = i
+    try:
+        while j != arr[j]:
+            arr[j] = arr[arr[j]]
+            j = arr[j]
+    except:
+        print(j, ' ', len(arr))
+    return j
+
+def find(arr, p, q):
+    return root(arr,p)==root(arr,q)
+
+def union(arr1,sz1, p, q):
+    arr=arr1
+    sz=sz1
     
+    i = arr[p]
+    j = arr[q]
+    if (sz[i] < sz[j]):
+        arr[i] = j
+        sz[j] =sz[j]+ sz[i]
+    else:
+        arr[j] = i
+        sz[i] =sz[i]+ sz[j]
     
-    return arr_
+    return arr, sz
 
 
 def hoshenKoplemanLabels(img_):
     properLabels = []
-    for i in range(20000):
-        properLabels.append(i)
+    sz = []
+    properLabels=[]
+    sz=[]
+    properLabels.append(0)
+    sz.append(1)
         
     start = time.time()
     
@@ -43,65 +63,63 @@ def hoshenKoplemanLabels(img_):
                     if left==0 and above== 0:
                         largestLabel=largestLabel+1
                         labels[j][i] = largestLabel
+                        properLabels.append(largestLabel)
+                        sz.append(1)
                     
                     if left==1 and above== 0:
-                        labels[j][i] = properLabels[labels[j][i-1]]
+                        labels[j][i] = root(properLabels,labels[j][i-1])
                     if left==0 and above== 1:
-                        labels[j][i] = properLabels[labels[j-1][i]]
+                        labels[j][i] = root(properLabels,labels[j-1][i])
                     if left==1 and above== 1:
                     
                         if labels[j][i-1]!= labels[j-1][i]:
                             if labels[j][i-1]> labels[j-1][i]:
-                                properLabels=unionArray(properLabels,int(labels[j][i-1]),int(labels[j-1][i]))
-                                labels[j][i] = properLabels[int(labels[j][i-1])]
+                                properLabels, sz= union(properLabels,sz,int(labels[j][i-1]),int(labels[j-1][i]))
+                                labels[j][i] = root(properLabels,int(labels[j][i-1]))
                             if labels[j][i-1]< labels[j-1][i]:
-                                properLabels=unionArray(properLabels,int(labels[j-1][i]),int(labels[j][i-1]))
-                                labels[j][i] = properLabels[int(labels[j][i-1])]
+                                properLabels , sz=union(properLabels,sz,int(labels[j-1][i]),int(labels[j][i-1]))
+                                labels[j][i] = root(properLabels,int(labels[j][i-1]))
                         else:
-                            labels[j][i] = properLabels[labels[j][i-1]]
+                            labels[j][i] = root(properLabels,labels[j][i-1])
                         
                 if i == 0 and j == 0:
                     if img_[j][i] == 1:
                         largestLabel=largestLabel+1
                         labels[j][i] = largestLabel
+                        properLabels.append(largestLabel)
+                        sz.append(1)
                 if i == 0 and j>0:
                     above = img_[j-1][i]
                     if img_[j][i] == 1:
                         if above==1:
-                            labels[j][i] = properLabels[labels[j-1][i]]
+                            labels[j][i] = root(properLabels,labels[j-1][i])
                         if above==0:
                             largestLabel=largestLabel+1
                             labels[j][i] = largestLabel
+                            properLabels.append(largestLabel)
+                            sz.append(1)
                 if i>0 and j==0:
                     left = img_[j][i-1]
                     if img_[j][i] == 1:
                         if left==1:
-                            labels[j][i] = properLabels[labels[j][i-1]]
+                            labels[j][i] = root(properLabels,labels[j][i-1])
                     
                         if left==0 :
                             largestLabel=largestLabel+1
                             labels[j][i] = largestLabel
+                            properLabels.append(largestLabel)
+                            sz.append(1)
                             
     print('L1',time.time()-start, 'secs')
-    
-    start = time.time()
 
-    for i in range(labels.shape[0]):
-        for j in range(labels.shape[1]):
-            labels[i][j] = properLabels[labels[i][j]]
-    print('L2',time.time()-start, 'secs')
-           
-    
-            
     #------------------ 2nd Loop starts here--------------------------#
     
     start = time.time()
     for j in range(img_.shape[0]):
         for i in range(img_.shape[1]):
             if img_[j][i] == 1:
-                
                 # part 1
-                if 1:
+                if i==0 or j==0:
          
                     if i==0:
                         iminus1 = img_.shape[1]-1
@@ -111,49 +129,34 @@ def hoshenKoplemanLabels(img_):
                         jminus1 = img_.shape[0]-1
                     else:
                         jminus1 = j-1
-                    
-                    
-                    
                     left = img_[j][iminus1]
                     above = img_[jminus1][i]
-                    
                     if left==1 and above== 0:
-                        properLabels=unionArray(properLabels,int(labels[j][i]),int(labels[j][iminus1]))
-                        labels[j][i] = properLabels[labels[j][iminus1]]
+                        properLabels,sz=union(properLabels,sz,int(labels[j][i]),int(labels[j][iminus1]))
+                        #labels[j][i] = root(properLabels,labels[j][iminus1])
                     if left==0 and above== 1:
-                        properLabels=unionArray(properLabels,int(labels[j][i]),int(labels[jminus1][i]))
-                        labels[j][i] = properLabels[labels[jminus1][i]]
+                        properLabels,sz=union(properLabels,sz,int(labels[j][i]),int(labels[jminus1][i]))
+                        #labels[j][i] = root(properLabels,labels[jminus1][i])
                     if left==1 and above== 1:
                         if labels[j][iminus1]!= labels[jminus1][i]:
-                            if labels[j][iminus1]> labels[jminus1][i]:
-                                properLabels=unionArray(properLabels,int(labels[j][iminus1]),int(labels[jminus1][i]))
-                                labels[j][i] = properLabels[int(labels[j][iminus1])]
-                            if labels[j][iminus1]< labels[jminus1][i]:
-                                properLabels=unionArray(properLabels,int(labels[jminus1][i]),int(labels[j][iminus1]))
-                                labels[j][i] = properLabels[int(labels[j][iminus1])]
-                        else:
-                            labels[j][i] = properLabels[labels[j][iminus1]]
+                            properLabels,sz=union(properLabels,sz,int(labels[j][iminus1]),int(labels[jminus1][i]))
      
-    print('L3',time.time()-start, 'secs')
-    
-    for i in range(labels.shape[0]):
-        for j in range(labels.shape[1]):
-            labels[i][j] = properLabels[labels[i][j]]
-    
+    print('L2',time.time()-start, 'secs')
     start = time.time()
-    L = {}
-    a = np.unique(labels).tolist()
-    for i in a:
-        L[i] = a.index(i)
-
+    listy ={}
+    num=0
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):
-            labels[i][j] = L[labels[i][j]]
-    print('L4',time.time()-start, 'secs')  
-    
+            if labels[i][j]!=0:
+                labels[i][j] = root(properLabels,labels[i][j])
+                if labels[i][j] in listy.keys():
+                    labels[i][j]=listy[labels[i][j]]
+                else:
+                    num=num+1
+                    listy[labels[i][j]]=num
+                    labels[i][j]=num
+    print('L3',time.time()-start, 'secs')  
     return labels
-                
-    
     
 def precipitateCentres(labelImage, labelNumber):
     img = (labelImage==labelNumber)*1
