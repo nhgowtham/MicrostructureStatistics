@@ -1,6 +1,6 @@
 import numpy as np
 
-def monteCarloConvexity(images):
+def monteCarloConvexity(images,number=50000):
     counter = 0
     counterPositive12 = 0
     A12=[]
@@ -13,7 +13,7 @@ def monteCarloConvexity(images):
                 pointX.append(i)
                 pointY.append(j)
            
-    for i in range(50000):
+    for i in range(number):
         p1 = np.random.randint(0,len(pointX))
         p2 = np.random.randint(0,len(pointX))
         x1 = pointX[p1]
