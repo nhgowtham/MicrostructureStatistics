@@ -246,7 +246,7 @@ def giveAvailablePoints(cross, theta1, theta2, angularShift = 0):
     
         
     return r_net_angle, r
-##
+
 
 
 

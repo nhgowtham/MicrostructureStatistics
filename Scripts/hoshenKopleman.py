@@ -110,6 +110,11 @@ def hoshenKoplemanLabels(img_):
                             properLabels.append(largestLabel)
                             sz.append(1)
                             
+    for i in range(labels.shape[0]):
+        for j in range(labels.shape[1]):
+            if labels[i][j]!=0:
+                labels[i][j] = root(properLabels,labels[i][j])
+                            
     print('L1',time.time()-start, 'secs')
 
     #------------------ 2nd Loop starts here--------------------------#
@@ -149,6 +154,10 @@ def hoshenKoplemanLabels(img_):
         for j in range(labels.shape[1]):
             if labels[i][j]!=0:
                 labels[i][j] = root(properLabels,labels[i][j])
+                
+    for i in range(labels.shape[0]):
+        for j in range(labels.shape[1]):
+            if labels[i][j]!=0:            
                 if labels[i][j] in listy.keys():
                     labels[i][j]=listy[labels[i][j]]
                 else:
