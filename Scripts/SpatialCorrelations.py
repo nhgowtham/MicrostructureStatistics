@@ -1,7 +1,7 @@
 import pymks
 import numpy as np
 from PIL import Image
-
+from scipy import stats
 from pymks.stats import autocorrelate
 from pymks import PrimitiveBasis
 from pymks.tools import draw_microstructures
@@ -191,6 +191,24 @@ def radialDistribution(cross):
         sum_val =np.sum(r_net)
         convolved = np.multiply(r_net,cross)
         r[i] =np.sum(convolved)/sum_val
+    r[0] = cross[int(cross.shape[0]/2)][int(cross.shape[1]/2)]
+    return r
+
+def radialDistribution_hm(cross,radiusVector):
+    '''
+    Input : Correlation Vector
+    
+    Output : probability radially distributed hm
+    '''   
+    r = np.zeros(int(cross.shape[0]/2))
+    for i in range(r.shape[0]):
+        r1 = (radiusVector>=i)*1
+        r2 = (radiusVector<=i+1)*1
+        r_net = r1*r2
+        convolved = np.multiply(r_net,cross)
+        aa = convolved[np.nonzero(convolved)] 
+        r[i] = stats.hmean(aa)
+        
     r[0] = cross[int(cross.shape[0]/2)][int(cross.shape[1]/2)]
     return r
 
